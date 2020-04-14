@@ -13,7 +13,7 @@ Links such as https://s.orbis.zone/1w-a currently display a 522 error which coul
 * Permission to redirect to clone site, otherwise hosting of the site with the function
 
 ## Owners
-* Implementation: Myself (Senior SRE developer)
+* Implementation: Myself (Senior SRE)
 * Data: Coriolis devs (data controllers)
 * Clone Site: Chapter4 (as this will increase web traffic to destination)
 
