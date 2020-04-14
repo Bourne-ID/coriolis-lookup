@@ -8,14 +8,9 @@ Numourous guides and videos link to the short code (1234) which are currently un
 Links such as https://s.orbis.zone/1w-a currently display a 522 error which could cause frustration to the end user looking for specific builds. This proposal bridges this gap by taking the short code, convert to the longer code (outfit/python?code=A0pktkFflidkssf52m3M-3R3R2x04etc) and redirecting to a working clone of the website, for example coriolis.sourcebin.org. This would allow the user to view the build until such time that the main site is back online. 
 
 ## Requirements
-* CSV dump of public short codes to long code (possibly including the ship if neccessary)
-* Serverless Function
-* Permission to redirect to clone site, otherwise hosting of the site with the function
-
-## Owners
-* Implementation: Myself (Senior SRE)
-* Data: Coriolis devs (data controllers)
-* Clone Site: Chapter4 (as this will increase web traffic to destination)
+* CSV dump of public short codes to long code (possibly including the ship if neccessary) **Coriolis devs** 
+* Serverless Function - **BourneID**
+* Permission to redirect to clone site, otherwise hosting of the site with the function - **Chapter4**
 
 ## Implementation
 * A one off but repeatable import of CSV data to Azure Table Storage ($0.06/month), indexed on short code
