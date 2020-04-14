@@ -34,7 +34,7 @@ Get short code from path, ensure it's valid and lookup. Error if it doesn't exis
 **Render long URL and Redirect Browser to Clone Site**
 Browser will receive HTTP Code 307, temporary redirect.
 
-## Estimated Costs/Limits
+## Estimated Costs/Limits (Covered by BourneID)
 | Service       | Free/Cost     |
 | ------------- |:-------------:|
 | LB with IP    | Free          |
