@@ -2,7 +2,7 @@ Short Code Lookup
 ==============
 
 ## Summary
-Numourous guides and videos link to the short code (1234) which are currently unavailable whilst the site is offline. This proposal bridges the gap to allow users to continue to access these builds whilst the main site's host is complete
+Numourous guides and videos link to the short code on orbis.zone (like /1234) which are currently unavailable whilst the site is offline. This proposal bridges the gap to allow users to continue to access these builds whilst the main site is moved and brought online on the new host. There is currently no way to look up this code to the build. 
 
 ## Details
 Links such as https://s.orbis.zone/1w-a currently display a 522 error which could cause frustration to the end user looking for specific builds. This proposal bridges this gap by taking the short code, convert to the longer code (outfit/python?code=A0pktkFflidkssf52m3M-3R3R2x04etc) and redirecting to a working clone of the website, for example coriolis.sourcebin.org. This would allow the user to view the build until such time that the main site is back online. 
