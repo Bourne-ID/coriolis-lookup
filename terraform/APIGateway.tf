@@ -6,7 +6,7 @@ resource "aws_api_gateway_rest_api" "URLShortener" {
 resource "aws_api_gateway_resource" "URLShortenerResource" {
   rest_api_id = "${aws_api_gateway_rest_api.URLShortener.id}"
   parent_id   = "${aws_api_gateway_rest_api.URLShortener.root_resource_id}"
-  path_part   = ""
+  path_part   = "test"
 }
 
 resource "aws_api_gateway_method" "get" {
@@ -14,6 +14,7 @@ resource "aws_api_gateway_method" "get" {
   resource_id   = "${aws_api_gateway_resource.URLShortenerResource.id}"
   http_method   = "GET"
   authorization = "NONE"
+
 }
 resource "aws_api_gateway_method" "post" {
   rest_api_id   = "${aws_api_gateway_rest_api.URLShortener.id}"
@@ -23,24 +24,14 @@ resource "aws_api_gateway_method" "post" {
 }
 
 resource "aws_api_gateway_integration" "MyDemoIntegration" {
-  rest_api_id          = "${aws_api_gateway_rest_api.URLShortener.id}"
-  resource_id          = "${aws_api_gateway_resource.URLShortenerResource.id}"
-  http_method          = "${aws_api_gateway_method.get.http_method}"
+  rest_api_id          = aws_api_gateway_rest_api.URLShortener.id
+  resource_id          = aws_api_gateway_resource.URLShortenerResource.id
+  credentials = aws_iam_role.DDBCrudRole.arn
   type                 = "AWS"
-  uri                  = "${aws_dynamodb_table.shorturl_lookup.arn}/GET/"
+  http_method          = aws_api_gateway_method.get.http_method
+  integration_http_method = "POST"
+  uri                  = "arn:aws:apigateway:${var.aws_region}:dynamodb:action/GetItem"
 
   timeout_milliseconds = 29000
-
-  request_parameters = {
-    "integration.request.header.X-Authorization" = "'static'"
-  }
-
-  # Transforms the incoming XML request to JSON
-  request_templates = {
-    "application/xml" = <<EOF
-{
-   "body" : $input.json('$')
 }
-EOF
-  }
-}
+

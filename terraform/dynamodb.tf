@@ -9,11 +9,11 @@ resource "aws_dynamodb_table" "shorturl_lookup" {
     name = "Key"
     type = "S"
   }
-
-  attribute {
-    name = "URL"
-    type = "S"
-  }
+//
+//  attribute {
+//    name = "URL"
+//    type = "S"
+//  }
 
   ttl {
     attribute_name = "TimeToExist"
@@ -23,5 +23,9 @@ resource "aws_dynamodb_table" "shorturl_lookup" {
   tags = {
     Name        = "shorturl-table-1"
     Environment = "production"
+  }
+
+  lifecycle {
+    ignore_changes = ["ttl"]
   }
 }
