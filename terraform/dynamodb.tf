@@ -26,6 +26,17 @@ resource "aws_dynamodb_table" "shorturl_lookup" {
   }
 
   lifecycle {
-    ignore_changes = ["ttl"]
+    ignore_changes = [ttl]
   }
+}
+
+resource "aws_dynamodb_table_item" "item" {
+  hash_key = aws_dynamodb_table.shorturl_lookup.hash_key
+  table_name = aws_dynamodb_table.shorturl_lookup.name
+  item = <<EOF
+{
+  "Key": {"S": "1234"},
+  "URL": {"S": "5678"}
+}
+EOF
 }

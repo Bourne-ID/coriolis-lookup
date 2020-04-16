@@ -32,7 +32,7 @@ resource "aws_iam_role" "DDBCrudRole" {
         {
           "Action": "sts:AssumeRole",
           "Principal": {
-            "Service": "ec2.amazonaws.com"
+            "Service": "apigateway.amazonaws.com"
           },
           "Effect": "Allow",
           "Sid": ""
