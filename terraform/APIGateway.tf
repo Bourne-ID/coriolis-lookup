@@ -5,6 +5,7 @@ resource "aws_api_gateway_account" "account" {
 resource "aws_api_gateway_rest_api" "URLShortener" {
   name        = "URLShortener"
   description = "URL shortener and expander"
+
 }
 
 resource "aws_api_gateway_resource" "URLShortenerResource" {
@@ -13,7 +14,7 @@ resource "aws_api_gateway_resource" "URLShortenerResource" {
   path_part   = "{shortCode}"
 }
 
-resource "aws_api_gateway_method" "get" {
+resource "aws_api_gateway_method" "lookupMethod" {
   rest_api_id   = aws_api_gateway_rest_api.URLShortener.id
   resource_id   = aws_api_gateway_resource.URLShortenerResource.id
   http_method   = "GET"
@@ -25,7 +26,7 @@ resource "aws_api_gateway_integration" "callIntoDynamo" {
   resource_id          = aws_api_gateway_resource.URLShortenerResource.id
   credentials = aws_iam_role.DDBCrudRole.arn
   type                 = "AWS"
-  http_method          = aws_api_gateway_method.get.http_method
+  http_method          = aws_api_gateway_method.lookupMethod.http_method
   integration_http_method = "POST"
   uri                  = "arn:aws:apigateway:${var.aws_region}:dynamodb:action/GetItem"
 
@@ -46,7 +47,7 @@ EOF
 }
 
 resource "aws_api_gateway_method_response" "successResponse" {
-  http_method = aws_api_gateway_method.get.http_method
+  http_method = aws_api_gateway_method.lookupMethod.http_method
   resource_id = aws_api_gateway_resource.URLShortenerResource.id
   rest_api_id = aws_api_gateway_rest_api.URLShortener.id
   status_code = "307"
@@ -55,7 +56,7 @@ resource "aws_api_gateway_method_response" "successResponse" {
 
 resource "aws_api_gateway_integration_response" "successIntegration" {
   depends_on = [aws_api_gateway_integration.callIntoDynamo]
-  http_method = aws_api_gateway_method.get.http_method
+  http_method = aws_api_gateway_method.lookupMethod.http_method
   status_code = aws_api_gateway_method_response.successResponse.status_code
   resource_id = aws_api_gateway_resource.URLShortenerResource.id
   rest_api_id = aws_api_gateway_rest_api.URLShortener.id
@@ -90,6 +91,53 @@ resource "aws_api_gateway_integration_response" "errorIntegration" {
   # Transforms the backend JSON response to XML
 }
 
+##Root
+resource "aws_api_gateway_method" "rootMethod" {
+  authorization = "NONE"
+  http_method = "GET"
+  resource_id = aws_api_gateway_rest_api.URLShortener.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.URLShortener.id
+}
+
+resource "aws_api_gateway_integration" "rootIntegration" {
+  http_method = aws_api_gateway_method.rootMethod.http_method
+  resource_id = aws_api_gateway_rest_api.URLShortener.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.URLShortener.id
+  type = "MOCK"
+
+  request_templates = {
+    "application/json" = <<EOF
+{
+"statusCode": 200
+}
+EOF
+  }
+}
+
+resource "aws_api_gateway_integration_response" "rootIntegrationResponse" {
+  depends_on = [aws_api_gateway_integration.rootIntegration]
+  http_method = aws_api_gateway_method.rootMethod.http_method
+  resource_id = aws_api_gateway_rest_api.URLShortener.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.URLShortener.id
+  status_code = "200"
+  selection_pattern = "200"
+  response_parameters = {
+    "method.response.header.Content-Type" = "'text/html'"
+  }
+  response_templates = {
+    "text/html" = local.noMatchTempalte
+  }
+}
+
+resource "aws_api_gateway_method_response" "rootMethodResponse" {
+  http_method = aws_api_gateway_method.rootMethod.http_method
+  resource_id = aws_api_gateway_rest_api.URLShortener.root_resource_id
+  rest_api_id = aws_api_gateway_rest_api.URLShortener.id
+  status_code = "200"
+  response_parameters = {
+    "method.response.header.Content-Type" = false
+  }
+}
 
 ## No match page
 resource "aws_api_gateway_resource" "NoMatchResource" {
@@ -107,7 +155,7 @@ resource "aws_api_gateway_method" "noMatchMethod" {
 
 resource "aws_api_gateway_method_settings" "noMatchSettings" {
   rest_api_id = aws_api_gateway_rest_api.URLShortener.id
-  stage_name  = aws_api_gateway_deployment.MyDemoDeployment.stage_name
+  stage_name  = aws_api_gateway_deployment.primaryDeployment.stage_name
   method_path = "${aws_api_gateway_resource.NoMatchResource.path_part}/${aws_api_gateway_method.noMatchMethod.http_method}"
 
   settings {
@@ -159,15 +207,19 @@ resource "aws_api_gateway_method_response" "noMatchMethodResponse" {
   }
 }
 
-resource "aws_api_gateway_deployment" "MyDemoDeployment" {
+resource "aws_api_gateway_deployment" "primaryDeployment" {
   depends_on = [
     aws_api_gateway_integration.callIntoDynamo,
     aws_api_gateway_integration.noMatchIntegration,
-    aws_api_gateway_method.get,
+    aws_api_gateway_integration.rootIntegration,
+    aws_api_gateway_method.lookupMethod,
     aws_api_gateway_method.noMatchMethod,
+    aws_api_gateway_method.rootMethod,
   aws_api_gateway_method_response.errorResponse,
   aws_api_gateway_method_response.noMatchMethodResponse,
-  aws_api_gateway_method_response.successResponse]
+  aws_api_gateway_method_response.successResponse,
+    aws_api_gateway_method_response.rootMethodResponse
+  ]
 
   stage_name = "primary"
   rest_api_id = aws_api_gateway_rest_api.URLShortener.id
@@ -181,9 +233,9 @@ resource "aws_api_gateway_domain_name" "dns" {
 resource "aws_api_gateway_base_path_mapping" "mapping" {
   api_id = aws_api_gateway_rest_api.URLShortener.id
   domain_name = aws_api_gateway_domain_name.dns.domain_name
-  stage_name = aws_api_gateway_deployment.MyDemoDeployment.stage_name
+  stage_name = aws_api_gateway_deployment.primaryDeployment.stage_name
 }
 
 output "URL" {
-  value = aws_api_gateway_deployment.MyDemoDeployment.invoke_url
+  value = aws_api_gateway_deployment.primaryDeployment.invoke_url
 }
